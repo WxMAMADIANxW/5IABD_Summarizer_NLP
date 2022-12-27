@@ -3,11 +3,11 @@ import youtube_dl
 from pytube import YouTube as yt
 import whisper
 import torch
+from starlette.responses import JSONResponse
 from transformers import pipeline
 from docx import Document
 from fpdf import FPDF
 from fastapi import FastAPI
-from fastapi.responses import JSONResponseg
 import uvicorn
 import boto3
 

@@ -1,12 +1,9 @@
 import os
-import youtube_dl
 from pytube import YouTube as yt
 import whisper
 import torch
 from starlette.responses import JSONResponse
 from transformers import pipeline
-from docx import Document
-from fpdf import FPDF
 from fastapi import FastAPI
 import uvicorn
 import boto3
@@ -19,7 +16,6 @@ def summarize(link: str):
     audio_path = download_youtube_video_to_mp3(link)
     text = whisper_process(audio_path)
     summary = hugging_face(text)
-    txt_to_pdf(summary)
     return JSONResponse(summary)
 
 
@@ -77,18 +73,6 @@ def hugging_face(text_to_summarize):
 
     result = summarizer(text_to_summarize, **params)
     return result[0]["summary_text"]
-
-
-##FPDF
-def txt_to_pdf(text_to_sum):
-    pdf = FPDF()
-    pdf.set_font("Arial", size=15)
-    pdf.add_page()
-    pdf.cell(200, 10, txt="Summary : ",
-             ln=1, align='C')
-    pdf.multi_cell(0, 5, txt=text_to_sum, align='L')
-
-    pdf.output("resume.pdf")
 
 
 if __name__ == "__main__":

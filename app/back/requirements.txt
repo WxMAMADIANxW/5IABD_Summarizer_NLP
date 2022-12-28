@@ -5,3 +5,8 @@ torch
 transformers
 python-docx
 aspose-words
+starlette
+fpdf
+fastapi
+uvicorn
+boto3

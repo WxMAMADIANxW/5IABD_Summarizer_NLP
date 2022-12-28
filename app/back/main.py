@@ -26,11 +26,12 @@ def summarize(link: str):
 ##Pytube
 def download_youtube_video_to_mp3(link: str):
     audio = yt(link).streams.filter(only_audio=True).all()
-    audio[0].download(f"/tmp/audio-{link}.mp3")
+    video_id = link.split("=")[-1]
+    audio[0].download(f"/tmp/audio-{video_id}.mp3")
     # Download to S3 bucket
     s3 = boto3.client('s3')
     try:
-        s3.upload_file(f"/tmp/audio-{link}.mp3", "video-summarizer-bucket", f"audio-{link}.mp3")
+        s3.upload_file(f"/tmp/audio-{video_id}.mp3", "video-summarizer-bucket", f"audio-{video_id}.mp3")
     except Exception as e:
         raise e
 

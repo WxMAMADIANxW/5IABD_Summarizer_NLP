@@ -36,6 +36,7 @@ def download_youtube_video_to_mp3(link: str):
         s3.upload_file(f"/tmp/{video_id}.mp3", "video-summarizer-bucket", f"audio-{video_id}.mp3")
     except Exception as e:
         raise e
+    print("file uploaded")
     os.remove(f"/tmp/{video_id}.mp3")
     return f"audio-{video_id}.mp3"
 
@@ -49,8 +50,9 @@ def whisper_process(object_name):
         s3.download_file("video-summarizer-bucket", object_name, path)
     except Exception as e:
         raise e
+    print("file downloaded")
     text = WhispBase.transcribe(path, fp16=False)
-    print(text)
+    print("text:", text)
     return text['text']
 
 

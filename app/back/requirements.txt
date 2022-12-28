@@ -10,3 +10,4 @@ fpdf
 fastapi
 uvicorn
 boto3
+ffmpeg-python

@@ -37,7 +37,7 @@ def download_youtube_video_to_mp3(link: str):
     except Exception as e:
         raise e
     os.remove(f"/tmp/{video_id}.mp3")
-    return f"audio-{link}.mp3"
+    return f"audio-{video_id}.mp3"
 
 
 ##Whisper
@@ -50,6 +50,7 @@ def whisper_process(object_name):
     except Exception as e:
         raise e
     text = WhispBase.transcribe(path, fp16=False)
+    print(text)
     return text['text']
 
 

@@ -3,7 +3,7 @@ from pytube import YouTube as yt
 import whisper
 import torch
 from starlette.responses import JSONResponse
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 from fastapi import FastAPI
 import uvicorn
 import boto3
@@ -12,14 +12,13 @@ app = FastAPI()
 
 
 @app.get("/summarize")
-def summarize(link: str):
+def index(link: str):
     audio_path = download_youtube_video_to_mp3(link)
-    text = whisper_process(audio_path)
-    summary = hugging_face(text)
+    text = convert_speech_to_text(audio_path)
+    summary = summarize(text)
     return JSONResponse(summary)
 
 
-##Pytube
 def download_youtube_video_to_mp3(link: str):
     audio = yt(link).streams.filter(only_audio=True).first()
     video_id = link.split("=")[-1]
@@ -37,8 +36,7 @@ def download_youtube_video_to_mp3(link: str):
     return f"audio-{video_id}.mp3"
 
 
-##Whisper
-def whisper_process(object_name):
+def convert_speech_to_text(object_name):
     WhispBase = whisper.load_model('base')
     s3 = boto3.client('s3')
     path = f"/tmp/{object_name}"
@@ -52,27 +50,26 @@ def whisper_process(object_name):
     return text['text']
 
 
-##HuggingFace
-def hugging_face(text_to_summarize):
-    summarizer = pipeline(
-        "summarization",
-        "pszemraj/long-t5-tglobal-base-16384-book-summary",
-        device=0 if torch.cuda.is_available() else -1,
-    )
+def summarize(text_to_summarize):
+    tokenizer = AutoTokenizer.from_pretrained("ccdv/lsg-bart-base-4096-booksum",
+                                              trust_remote_code=True)
+    model = AutoModelForSeq2SeqLM.from_pretrained("ccdv/lsg-bart-base-4096-booksum",
+                                                  trust_remote_code=True)
+    pipe = pipeline("text2text-generation",
+                    model=model,
+                    tokenizer=tokenizer,
+                    device=0 if torch.cuda.is_available() else -1)
 
     params = {
-        "max_length": 1000,
-        "min_length": 258,
+        "truncation": True,
+        "max_length": 450,
         "no_repeat_ngram_size": 3,
-        "early_stopping": True,
-        "repetition_penalty": 3.5,
-        "length_penalty": 0.3,
-        "encoder_no_repeat_ngram_size": 3,
         "num_beams": 4,
-    }
+        "early_stopping": True
+    }  # parameters for text generation out of model
 
-    result = summarizer(text_to_summarize, **params)
-    return result[0]["summary_text"]
+    generated_text = pipe(text_to_summarize, **params)
+    return generated_text[0]["generated_text"]
 
 
 if __name__ == "__main__":

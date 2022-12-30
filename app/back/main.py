@@ -1,4 +1,6 @@
 import os
+import time
+
 from pytube import YouTube as yt
 import whisper
 import torch
@@ -13,9 +15,11 @@ app = FastAPI()
 
 @app.get("/summarize")
 def index(link: str):
+    start_time = time.time()
     audio_path = download_youtube_video_to_mp3(link)
     text = convert_speech_to_text(audio_path)
     summary = summarize(text)
+    print("time taken: ", time.time() - start_time)
     return JSONResponse(summary)
 
 
